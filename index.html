@@ -158,7 +158,7 @@ canvas{display:block;width:100%}
 .preset .cur{color:var(--gold);font-size:11px;margin-left:8px;font-weight:700}
 .btns{display:flex;gap:8px;align-items:center}
 
-nav{flex:none;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;background:linear-gradient(180deg,#0d0740,#090430);border-top:2px solid #2d22a0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+nav{flex:none;display:grid;grid-template-columns:repeat(9,1fr);gap:2px;background:linear-gradient(180deg,#0d0740,#090430);border-top:2px solid #2d22a0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
 nav button{border:1px solid transparent;background:none;border-radius:12px;padding:7px 0 6px;color:var(--dim);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;font-weight:800;letter-spacing:.03em;min-width:0}
 nav button .ic{font-size:21px}
 nav button[aria-selected=true]{color:var(--gold);border-color:#8c7420;background:#2a1d0a55;box-shadow:0 0 12px #ffc01f18}
@@ -166,6 +166,12 @@ nav button[aria-selected=true]{color:var(--gold);border-color:#8c7420;background
 #toast.on{opacity:1}
 @media (max-width:380px){.fcol .f{font-size:9.5px}.t1 h1{font-size:21px}nav button{font-size:8.5px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+#dynCurve{height:250px;background:var(--deep);border:1px solid #1b1763;border-radius:10px;width:100%;display:block}
+.gm{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:12px;color:var(--dim)}
+.gm label{width:34px;font-weight:700}.gm .tr{flex:1;height:10px;border-radius:6px;background:var(--deep);border:1px solid #1b1763;overflow:hidden;position:relative}
+.gm .tr i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--warn);transition:width .12s}
+.gm b{width:64px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
+nav button{font-size:9px}
 </style>
 </head>
 <body>
@@ -175,7 +181,7 @@ nav button[aria-selected=true]{color:var(--gold);border-color:#8c7420;background
   <div class="ttl">
     <div class="t1"><h1>DSP PRO</h1><span class="badge">ANDROID</span></div>
     <div class="t2">L-TRONIK AUDIO PROCESSOR</div>
-    <div class="t3">2 IN 4 OUT • 10 BAND EQ • X-OVER • DELAY</div>
+    <div class="t3">2 IN 4 OUT • 10 BAND EQ • COMP • GATE • X-OVER • DELAY</div>
   </div>
   <div class="acts">
     <span class="pill" id="pill"><i class="dot" id="dot"></i><b id="stxt">Offline</b></span>
@@ -196,12 +202,23 @@ nav button[aria-selected=true]{color:var(--gold);border-color:#8c7420;background
   <div class="card">
     <div class="chead"><span class="bar"></span><h2>EQ 10 Band</h2><div class="rt" id="eqSel"></div></div>
     <canvas id="eqCurve"></canvas>
+    <div class="line"><label>Spektrum</label><div id="eqSpecOn"></div></div>
+    <div class="line"><label>Sumber</label><div id="eqSpecSrc"></div></div>
     <div class="faders" id="faders"></div>
     <p class="note" style="text-align:center">Geser untuk gain. Ketuk dua kali untuk 0 dB. Ketuk frekuensi untuk memilih band.</p>
   </div>
   <div class="card"><h3 id="bandTitle">Band</h3><div id="bandBox"></div>
     <hr><button class="ghost" id="btnFlat" type="button">Ratakan semua band (0 dB)</button>
     <div class="line" id="eqCopy" style="margin-bottom:0"></div></div>
+</section>
+
+<section class="tab" id="t-dyn">
+  <div class="card"><div class="chead"><span class="bar"></span><h2>Compressor &amp; Gate</h2><div class="rt" id="dynSel"></div></div>
+    <canvas id="dynCurve"></canvas>
+    <div class="gm"><label>GR</label><div class="tr"><i id="grBar"></i></div><b id="grTxt">OFF</b></div>
+    <div class="gm"><label>GATE</label><div class="tr"><i id="gtBar"></i></div><b id="gtTxt">OFF</b></div>
+    <p class="note" style="text-align:center">Urutan sinyal: filter/EQ → gate → compressor → delay → gain → limiter. Titik putih = level input saat ini.</p></div>
+  <div style="--c:var(--oc)"><div class="card" id="compBox"></div><div class="card" id="gateBox"></div></div>
 </section>
 
 <section class="tab" id="t-xover"><div id="xoBox"></div></section>
@@ -225,6 +242,7 @@ nav button[aria-selected=true]{color:var(--gold);border-color:#8c7420;background
   <button role="tab" data-t="home"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>HOME</button>
   <button role="tab" data-t="matrix"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>MATRIX</button>
   <button role="tab" data-t="eq"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>EQ</button>
+  <button role="tab" data-t="dyn"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 20 12 12h9"/><path d="M3 20V4M3 20h18"/></svg></span>DYN</button>
   <button role="tab" data-t="xover"><span class="ic"><svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></span>X-OVER</button>
   <button role="tab" data-t="delay"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>DELAY</button>
   <button role="tab" data-t="spec"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 20v-5M12 20V8M18 20V4"/></svg></span>SPEC</button>
@@ -272,15 +290,18 @@ let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add
 
 /* ====================== State ====================== */
 const mkCh=()=>({src:0,hpft:0,lpft:0,hpf:20,hps:12,lpf:20000,lps:12,gain:0,dly:0,lim:0.5,phase:0,mute:0,
-  eq:Array(10).fill(0),eqf:[31,63,125,250,500,1000,2000,4000,8000,16000],eqq:Array(10).fill(1.4)});
+  eq:Array(10).fill(0),eqf:[31,63,125,250,500,1000,2000,4000,8000,16000],eqq:Array(10).fill(1.4),
+  d:{cOn:0,cThr:-20,cRat:4,cAtk:10,cRel:100,cKnee:6,cMk:0,gOn:0,gThr:-50,gRng:-40,gHold:50,gRel:100}});
 let S={ver:-1,inL:1,inR:1,chosen:0,specSrc:0,peak:1,tone:0,pink:0,ig:[0,0],il:[0.5,0.5],ch:[mkCh(),mkCh(),mkCh(),mkCh()]};
-const TABS=['home','matrix','eq','xover','delay','spec','preset','setup'];
+const TABS=['home','matrix','eq','dyn','xover','delay','spec','preset','setup'];
 let cur=0, selBand=0, tab='home', wl=null;
 const LS='ltronik-ui';
 function saveUi(){try{localStorage.setItem(LS,JSON.stringify({tab,cur,selBand}));}catch(e){}}
 try{const u=JSON.parse(localStorage.getItem(LS)||'{}');
   if(TABS.includes(u.tab))tab=u.tab;
   if(u.cur>=0&&u.cur<4)cur=u.cur; if(u.selBand>=0&&u.selBand<10)selBand=u.selBand;}catch(e){}
+let needD=true, dNext=0, eqSpecOn=true, mLast=[0,0,0,0,0,0], liveDyn={gr:[0,0,0,0],gt:[0,0,0,0]};
+try{eqSpecOn=localStorage.getItem('ltronik-eqspec')!=='0';}catch(e){}
 let dragging=false, holdUntil=0, lastLocal=0, needE=true;
 const refreshers=[]; const reg=f=>{refreshers.push(f);return f;};
 const refreshAll=()=>{document.documentElement.style.setProperty('--oc',OCOL[cur]);for(const f of refreshers)f();drawEq();};
@@ -312,7 +333,7 @@ function onData(txt){T.buf+=txt;let i;
 function setStatus(txt,cls){$('#stxt').textContent=txt;$('#pill').className='pill '+(cls||'');}
 function setConnected(on,name){
   T.connected=on;$('#btnConn').textContent=on?'PUTUS':'CONNECT';$('#btnDemo').textContent=on&&T.mode==='demo'?'STOP':'DEMO';$('#btnDemo').hidden=on&&T.mode!=='demo';
-  if(on){setStatus('Online','on');$('#pill').title=name||'';needE=true;S.ver=-1;T.queue.length=0;enqueue('pG','G');
+  if(on){setStatus('Online','on');$('#pill').title=name||'';needE=needD=true;S.ver=-1;T.queue.length=0;enqueue('pG','G');
     show(tab);wakeOn();}
   else{try{wl&&wl.release();}catch(e){}resetMeters();}
 }
@@ -376,22 +397,26 @@ function handleLine(l){
   else if(c==='m')parseMeter(l);
   else if(c==='s')parseSpec(l);
   else if(c==='e')parseEq(l);
+  else if(c==='d')parseDyn(l);
+  else if(c==='y')parseLiveDyn(l);
 }
 function parseState(l){
   const p=l.split('|'); if(p.length<6)return;
   const g=p[1].split(',').map(Number); if(g.length<11||g.some(isNaN))return;
   const n={ver:parseInt(p[0].slice(1),10),inL:g[0],inR:g[1],chosen:g[2],specSrc:g[3],peak:g[4],tone:g[5],pink:g[6],ig:[g[7],g[8]],il:[g[9],g[10]],ch:[]};
   for(let i=0;i<4;i++){const a=p[2+i].split(',').map(Number); if(a.length<22||a.some(isNaN))return;
-    n.ch.push({src:a[0],hpft:a[1],lpft:a[2],hpf:a[3],hps:a[4],lpf:a[5],lps:a[6],gain:a[7],dly:a[8],lim:a[9],phase:a[10],mute:a[11],eq:a.slice(12,22),eqf:S.ch[i].eqf,eqq:S.ch[i].eqq});}
+    n.ch.push({src:a[0],hpft:a[1],lpft:a[2],hpf:a[3],hps:a[4],lpf:a[5],lps:a[6],gain:a[7],dly:a[8],lim:a[9],phase:a[10],mute:a[11],eq:a.slice(12,22),eqf:S.ch[i].eqf,eqq:S.ch[i].eqq,d:S.ch[i].d});}
   if(dragging||Date.now()<holdUntil)return;           // jangan timpa saat pengguna sedang mengubah
   const external=n.ver!==S.ver&&Date.now()-lastLocal>2000;
-  S=n; if(external||S._first===undefined){needE=true;} S._first=1;
+  S=n; if(external||S._first===undefined){needE=needD=true;} S._first=1;
   refreshAll();
 }
 function parseMeter(l){
   const d=l.slice(1); if(d.length<12)return;
   const v=[];for(let i=0;i<6;i++)v.push(clamp(parseInt(d.substr(i*2,2),10)||0,0,99));
+  mLast=v;
   for(let i=0;i<4;i++)METER.o[i]&&METER.o[i].set(v[i]);
+  if(tab==='dyn')drawDyn();
   for(let i=0;i<2;i++)METER.i[i]&&METER.i[i].set(v[4+i]);
 }
 const METER={o:[],i:[]};
@@ -400,7 +425,7 @@ let specV=new Array(16).fill(0), specP=new Array(16).fill(0);
 function parseSpec(l){
   const d=l.slice(1); if(d.length<64)return;
   for(let i=0;i<16;i++){specV[i]=clamp(parseInt(d.substr(i*2,2),10)||0,0,99)/99;specP[i]=clamp(parseInt(d.substr(32+i*2,2),10)||0,0,99)/99;}
-  if(tab==='spec')drawSpec();
+  if(tab==='spec')drawSpec();else if(tab==='eq'&&eqSpecOn)drawEq();
 }
 function parseEq(l){
   const p=l.split('|'); if(p.length<3)return;
@@ -411,15 +436,31 @@ function parseEq(l){
   S.ch[o].eqf=f;S.ch[o].eqq=q;refreshAll();
 }
 
+function parseDyn(l){   // d<out>|cOn,cThr,cRat,cAtk,cRel,cKnee,cMk|gOn,gThr,gRng,gHold,gRel
+  const p=l.split('|'); if(p.length<3)return;
+  const o=parseInt(p[0].slice(1),10); if(!(o>=0&&o<4))return;
+  const a=p[1].split(',').map(Number), b=p[2].split(',').map(Number);
+  if(a.length<7||b.length<5||a.some(isNaN)||b.some(isNaN))return;
+  if(dragging||Date.now()<holdUntil)return;
+  const d=S.ch[o].d; [d.cOn,d.cThr,d.cRat,d.cAtk,d.cRel,d.cKnee,d.cMk]=a; [d.gOn,d.gThr,d.gRng,d.gHold,d.gRel]=b;
+  refreshAll();
+}
+function parseLiveDyn(l){   // y + per output: GR(2 digit, dB) + gain gate(2 digit, 00-99)
+  for(let i=0;i<4;i++){liveDyn.gr[i]=-(parseInt(l.substr(1+i*4,2),10)||0);liveDyn.gt[i]=(parseInt(l.substr(3+i*4,2),10)||0)/99;}
+  if(tab==='dyn')drawDyn();
+}
+
 /* ====================== Polling ====================== */
 let tick=0,eqNext=0;
 setInterval(()=>{
   if(!T.connected||document.hidden)return;
   tick++;
   if(T.queue.length<3){
-    if(tab==='home')enqueue('pM','M');
-    if(tab==='spec')enqueue('pP','P');
+    if(tab==='home'||tab==='dyn')enqueue('pM','M');
+    if(tab==='dyn')enqueue('pY','Y');
+    if(tab==='spec'||(tab==='eq'&&eqSpecOn))enqueue('pP','P');
     if(tick%6===0)enqueue('pG','G'+(S.ver>=0?S.ver:''));
+    if(needD&&tick%2===1){enqueue('pD'+dNext,'D'+dNext);dNext++;if(dNext>3){dNext=0;needD=false;}}
     if(needE&&tick%2===0){enqueue('pE'+eqNext,'E'+eqNext);eqNext++;if(eqNext>3){eqNext=0;needE=false;}}
   }
 },170);
@@ -612,9 +653,14 @@ function fitCanvas(cv){const d=Math.min(devicePixelRatio||1,3),w=cv.clientWidth,
   const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);return {x,w,h:hh};}
 const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function drawEq(){
-  drawXo();
+  drawXo();drawDyn();
   if(tab!=='eq')return;const f=fitCanvas(eqCv);if(!f)return;const {x,w,h:H}=f;
   x.clearRect(0,0,w,H);const X=hz=>fromF(hz)/1000*w, Y=db=>H/2-db/15*(H/2);
+  if(eqSpecOn){const g=x.createLinearGradient(0,H,0,0);g.addColorStop(0,col('--ok'));g.addColorStop(.7,col('--ok'));g.addColorStop(.85,col('--warn'));g.addColorStop(1,col('--bad'));
+    for(let i=0;i<16;i++){const x0=X(SPF[i]/1.26)+1,x1=X(SPF[i]*1.26)-1,bh=specV[i]*H*.92;
+      x.globalAlpha=.30;x.fillStyle=g;x.fillRect(x0,H-bh,Math.max(2,x1-x0),bh);
+      if(S.peak&&specP[i]>.03){x.globalAlpha=.55;x.fillStyle=col('--text');x.fillRect(x0,H-specP[i]*H*.92-1.5,Math.max(2,x1-x0),1.5);}}
+    x.globalAlpha=1;}
   x.lineWidth=1;x.font='10px system-ui';x.fillStyle=col('--dim');x.strokeStyle=col('--line');
   [-12,-6,0,6,12].forEach(d=>{x.globalAlpha=d===0?.9:.45;x.beginPath();x.moveTo(0,Y(d)+.5);x.lineTo(w,Y(d)+.5);x.stroke();x.globalAlpha=1;x.fillText((d>0?'+':'')+d,3,Y(d)-2);});
   [50,100,500,1000,5000,10000].forEach(hz=>{x.globalAlpha=.45;x.beginPath();x.moveTo(X(hz)+.5,0);x.lineTo(X(hz)+.5,H);x.stroke();x.globalAlpha=1;x.fillText(fmtHzS(hz),X(hz)+3,H-3);});
@@ -686,11 +732,52 @@ function drawSpec(){
       if(!armed){armed=1;save.textContent='Yakin?';save.classList.add('danger');setTimeout(()=>{armed=0;save.textContent='Simpan';save.classList.remove('danger');},2500);return;}
       armed=0;save.textContent='Simpan';save.classList.remove('danger');S.chosen=i;holdUntil=0;sendNow('preset.save',i);enqueue('pG','G');toast('Preset '+(i+1)+' disimpan');refreshAll();}});
     box.append(h('div',{class:'preset'},h('div',{class:'nm'},n,cur_),h('div',{class:'btns'},
-      h('button',{class:'ghost',type:'button',text:'Muat',onclick:()=>{S.chosen=i;holdUntil=0;sendNow('preset.load',i);needE=true;S.ver=-1;enqueue('pG','G');toast('Memuat preset '+(i+1));refreshAll();}}),save)));
+      h('button',{class:'ghost',type:'button',text:'Muat',onclick:()=>{S.chosen=i;holdUntil=0;sendNow('preset.load',i);needE=needD=true;S.ver=-1;enqueue('pG','G');toast('Memuat preset '+(i+1));refreshAll();}}),save)));
     rows.push(cur_);});
   reg(()=>rows.forEach((r,i)=>r.textContent=S.chosen===i?'terakhir dipakai':''));
 })();
 
+
+/* ---------- Spektrum di tab EQ ---------- */
+(()=>{$('#eqSpecOn').append(toggle(()=>eqSpecOn,v=>{eqSpecOn=!!v;try{localStorage.setItem('ltronik-eqspec',v?'1':'0');}catch(e){}},['Mati','Aktif']));
+  $('#eqSpecSrc').append(seg(SPSRC,()=>S.specSrc,i=>{S.specSrc=i;send('spec.src',i);}));})();
+
+/* ---------- DYN: Compressor & Gate ---------- */
+function compOut(L,T,R,W){const o=L-T;if(W<=.01)return o<=0?L:T+o/R;if(2*o<-W)return L;if(2*o>W)return T+o/R;const t=o+W/2;return L+(1/R-1)*t*t/(2*W);}
+function dynOut(d,L){let g=L;if(d.gOn&&L<d.gThr)g+=d.gRng;return d.cOn?compOut(g,d.cThr,d.cRat,d.cKnee)+d.cMk:g;}
+(()=>{
+  $('#dynSel').append(chSel());
+  const D=()=>C().d, sk=(k,v)=>{D()[k]=v;send(OUTK(cur,k),v);};
+  const sl=(label,min,max,step,k,fmt)=>slider({label,min,max,step,get:()=>D()[k],fmt,onSet:v=>sk(k,v)});
+  const ms=v=>v+' ms', db1=v=>v.toFixed(1)+' dB', db0=v=>v.toFixed(0)+' dB';
+  $('#compBox').append(chHead('Compressor',toggle(()=>D().cOn,v=>sk('cOn',v?1:0),['OFF','ON'],'onb')),
+    sl('Threshold',-60,0,.5,'cThr',db1), sl('Ratio',1,20,.5,'cRat',v=>v.toFixed(1)+' : 1'),
+    sl('Attack',1,300,1,'cAtk',ms), sl('Release',10,2000,10,'cRel',ms),
+    sl('Knee',0,12,1,'cKnee',db0), sl('Makeup',0,24,.5,'cMk',v=>'+'+v.toFixed(1)+' dB'));
+  $('#gateBox').append(chHead('Gate',toggle(()=>D().gOn,v=>sk('gOn',v?1:0),['OFF','ON'],'onb')),
+    sl('Threshold',-80,0,.5,'gThr',db1), sl('Range',-80,0,1,'gRng',db0),
+    sl('Hold',0,1000,5,'gHold',ms), sl('Release',5,2000,5,'gRel',ms));
+})();
+function drawDyn(){
+  if(tab!=='dyn')return;const cv=$('#dynCurve');if(!cv)return;const f=fitCanvas(cv);if(!f)return;const {x,w,h:H}=f;
+  const d=C().d;x.clearRect(0,0,w,H);
+  const s=Math.min(H-34,w-52),x0=42,y0=8,X=v=>x0+s*(v+60)/60,Y=o=>y0+s*(1-(o+60)/60);
+  x.font='10px system-ui';x.lineWidth=1;x.strokeStyle=col('--line2');x.fillStyle=col('--dim');
+  x.textAlign='right';
+  for(let v=-60;v<=0;v+=10){x.globalAlpha=.5;x.beginPath();x.moveTo(X(v),y0);x.lineTo(X(v),y0+s);x.stroke();x.beginPath();x.moveTo(x0,Y(v));x.lineTo(x0+s,Y(v));x.stroke();x.globalAlpha=1;x.fillText(v,x0-5,Y(v)+3);}
+  x.textAlign='center';for(let v=-60;v<=0;v+=20)x.fillText(v,X(v),y0+s+13);x.fillText('masuk (dB)',x0+s/2,y0+s+26);
+  x.save();x.translate(10,y0+s/2);x.rotate(-Math.PI/2);x.fillText('keluar (dB)',0,0);x.restore();
+  x.setLineDash([4,4]);x.strokeStyle=col('--dim');x.globalAlpha=.6;x.beginPath();x.moveTo(X(-60),Y(-60));x.lineTo(X(0),Y(0));x.stroke();x.setLineDash([]);x.globalAlpha=1;
+  if(d.cOn){x.strokeStyle=col('--warn');x.beginPath();x.moveTo(X(d.cThr),y0);x.lineTo(X(d.cThr),y0+s);x.stroke();}
+  if(d.gOn){x.strokeStyle=col('--bad');x.beginPath();x.moveTo(X(d.gThr),y0);x.lineTo(X(d.gThr),y0+s);x.stroke();}
+  x.beginPath();for(let i=0;i<=120;i++){const v=-60+i*.5,y=Y(clamp(dynOut(d,v),-60,0));i?x.lineTo(X(v),y):x.moveTo(X(v),y);}
+  x.strokeStyle=col('--oc');x.lineWidth=2.6;x.stroke();x.lineWidth=1;
+  const li=Math.max(mLast[4]*S.inL,mLast[5]*S.inR)/99*48-48;
+  if((d.cOn||d.gOn)&&li>-60){x.fillStyle=col('--text');x.beginPath();x.arc(X(li),Y(clamp(dynOut(d,li),-60,0)),4.5,0,7);x.fill();}
+  const gr=liveDyn.gr[cur],gt=liveDyn.gt[cur];
+  $('#grBar').style.width=(d.cOn?clamp(-gr/20,0,1)*100:0)+'%';$('#grTxt').textContent=d.cOn?gr.toFixed(0)+' dB':'OFF';
+  $('#gtBar').style.width=(d.gOn?gt*100:0)+'%';$('#gtBar').style.background=gt>.5?col('--ok'):col('--bad');$('#gtTxt').textContent=d.gOn?(gt>.5?'OPEN':'SHUT'):'OFF';
+}
 
 /* ---------- SETUP ---------- */
 (()=>{const box=$('#sysBox');
@@ -701,7 +788,7 @@ function drawSpec(){
     h('p',{class:'note',text:'Nada uji dan pink noise bisa terdengar keras. Turunkan volume amplifier sebelum menyalakan.'})));
   const rs=h('button',{class:'ghost danger',type:'button',text:'Reset pabrik'});let armed=0,tm;
   rs.onclick=()=>{if(!armed){armed=1;rs.textContent='Ketuk lagi untuk menghapus semua pengaturan';tm=setTimeout(()=>{armed=0;rs.textContent='Reset pabrik';},3000);return;}
-    clearTimeout(tm);armed=0;rs.textContent='Reset pabrik';holdUntil=0;sendNow('factory',1);needE=true;S.ver=-1;enqueue('pG','G');toast('Reset pabrik dikirim');};
+    clearTimeout(tm);armed=0;rs.textContent='Reset pabrik';holdUntil=0;sendNow('factory',1);needE=needD=true;S.ver=-1;enqueue('pG','G');toast('Reset pabrik dikirim');};
   const info=h('p',{class:'note'});
   const upd=()=>{info.textContent=`Mode ${T.mode==='demo'?'demo (tanpa perangkat)':T.connected?'Bluetooth LE':'offline'} · ${T.sent} perintah terkirim · versi state ${S.ver}`;};
   reg(upd);setInterval(()=>{if(tab==='setup')upd();},1000);
@@ -715,7 +802,7 @@ function drawSpec(){
 function show(t){tab=t;saveUi();
   document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));
   document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
-  $('main').scrollTop=0;refreshAll();if(t==='spec')drawSpec();}
+  $('main').scrollTop=0;refreshAll();if(t==='spec')drawSpec();if(t==='dyn'||t==='eq')enqueue('pD'+cur,'D'+cur);}
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>show(b.dataset.t));
 addEventListener('resize',()=>{drawEq();if(tab==='spec')drawSpec();});
 function warnMsg(m){const w=$('#warn');w.style.display='block';w.textContent=m;}
@@ -741,6 +828,8 @@ const Demo={tm:null,st:null,ver:1,t:0,
     else if(c==='G'){const v=l.length>1?parseInt(l.slice(1),10):-1;if(v===this.ver)this.emit('n');else this.emit(this.stateLine());}
     else if(c==='M'){this.t+=.17;const m=[];for(let i=0;i<6;i++)m.push(String(Math.round(clamp(52+30*Math.sin(this.t*(1.3+i*.4)+i)+Math.random()*10,0,99))).padStart(2,'0'));this.emit('m'+m.join(''));}
     else if(c==='P'){this.t+=.1;let a='',b='';for(let i=0;i<16;i++){const v=clamp(70-i*2.2+22*Math.sin(this.t*2+i*.7)+Math.random()*8,0,99);a+=String(Math.round(v)).padStart(2,'0');b+=String(Math.round(clamp(v+8,0,99))).padStart(2,'0');}this.emit('s'+a+b);}
+    else if(c==='D'){const o=parseInt(l.slice(1),10),d=this.st.ch[o].d;this.emit(`d${o}|${[d.cOn,d.cThr,d.cRat,d.cAtk,d.cRel,d.cKnee,d.cMk].join(',')}|${[d.gOn,d.gThr,d.gRng,d.gHold,d.gRel].join(',')}`);}
+    else if(c==='Y'){this.t+=.1;let r='y';this.st.ch.forEach((ch,i)=>{r+=String(Math.round(ch.d.cOn?clamp(6+5*Math.sin(this.t*2+i),0,99):0)).padStart(2,'0')+String(ch.d.gOn&&Math.sin(this.t*.8)<-.6?0:99).padStart(2,'0');});this.emit(r);}
     else if(c==='E'){const o=parseInt(l.slice(1),10),ch=this.st.ch[o];this.emit(`e${o}|${ch.eqf.join(',')}|${ch.eqq.map(q=>q.toFixed(1)).join(',')}`);}
   },
   stateLine(){const s=this.st;let r=`t${this.ver}|${[s.inL,s.inR,s.chosen,s.specSrc,s.peak,s.tone,s.pink,s.ig[0].toFixed(1),s.ig[1].toFixed(1),s.il[0].toFixed(1),s.il[1].toFixed(1)].join(',')}`;
@@ -759,7 +848,8 @@ const Demo={tm:null,st:null,ver:1,t:0,
       else if(f==='hpfs')c.hps=near(c.hpft,n);else if(f==='lpfs')c.lps=near(c.lpft,n);
       else if(f==='gain')c.gain=n;else if(f==='delay')c.dly=n;else if(f==='lim')c.lim=n;
       else if(f==='phase')c.phase=n===180?180:0;else if(f==='mute')c.mute=+(v==='1');
-      else if(/^eqf\d$/.test(f))c.eqf[+f[3]]=n;else if(/^eqq\d$/.test(f))c.eqq[+f[3]]=n;else if(/^eq\d$/.test(f))c.eq[+f[2]]=n;}
+      else if(/^eqf\d$/.test(f))c.eqf[+f[3]]=n;else if(/^eqq\d$/.test(f))c.eqq[+f[3]]=n;else if(/^eq\d$/.test(f))c.eq[+f[2]]=n;
+      else if(c.d&&f in c.d)c.d[f]=n;}
   }};
 </script>
 </body>
